@@ -1,1 +1,1 @@
-python setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel register -r local upload -r local

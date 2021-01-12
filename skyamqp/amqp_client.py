@@ -17,7 +17,7 @@ class AMQP_Client:
   
   def create_RPC_Server(self, queue: str, on_message: None, prefetch_count: int):
     return RPC_Server(self.__connection__, queue, on_message, prefetch_count)
-  def create_RPC_Client(self, queue: str, timeout: int):
+  def create_RPC_Client(self, queue: str, timeout: int = 0):
     if not hasattr(self, "__clientChannel__"):
       self.__clientChannel__ = self.__connection__.channel()
       self.__clientChannel__.confirm_delivery()

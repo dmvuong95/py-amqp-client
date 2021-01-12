@@ -9,10 +9,11 @@ connection = AMQP_Client(
   heartbeat=5
 )
 
-client = connection.create_RPC_Client('test_queue', 0)
+client = connection.create_RPC_Client(
+  queue='test_queue',
+  timeout=0)
 try:
   result = client.send('routing.key.test', 'sample message')
-
   print('Result:', result)
 except Exception as e:
   print(e)

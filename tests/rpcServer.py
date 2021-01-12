@@ -12,10 +12,14 @@ connection = AMQP_Client(
 
 def on_message(data, routing_key):
   print(routing_key, data)
-  time.sleep(4)
+  for i in range(10000000):
+    print(i)
   return 'felhfawhefhwef'
 
-server = connection.create_RPC_Server('test_queue', on_message, 100)
+server = connection.create_RPC_Server(
+  queue='test_queue',
+  on_message=on_message,
+  prefetch_count=100)
 
 try:
   server.start()

@@ -3,9 +3,9 @@ import uuid
 import time
 
 class RPC_Client:
-  def __init__(self, connection: pika.BlockingConnection, channel: pika.adapters.blocking_connection.BlockingChannel, queue: str, timeout: int):
+  def __init__(self, connection: pika.BlockingConnection, channel: pika.adapters.blocking_connection.BlockingChannel, queue: str, timeout: int = 0):
     self.__responses__ = []
-    self.__timeout__ = timeout or 60
+    self.__timeout__ = timeout
 
     self.queueName = 'server.rpc.' + queue
     # Consume an exclusive queue
@@ -65,9 +65,9 @@ class RPC_Client:
     method: pika.spec.Basic.Deliver,
     properties: pika.spec.BasicProperties,
     body: bytes):
-    print(method.delivery_tag, method.routing_key)
-    print(properties.content_type, properties.correlation_id)
-    print(body)
+    # print(method.delivery_tag, method.routing_key)
+    # print(properties.content_type, properties.correlation_id)
+    # print(body)
     for res in self.__responses__:
       if res.corr_id == properties.correlation_id:
         res.response = body
