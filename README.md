@@ -15,7 +15,10 @@ client = connection.create_RPC_Client(
   queue='test_queue',
   timeout=0)
 try:
-  result = client.send('routing.key.test', 'sample message')
+  # Must to send object json
+  result = client.send('routing.key.test', {
+    "data": '123'
+  })
   print('Result:', result)
 except Exception as e:
   print(e)
@@ -34,9 +37,10 @@ connection = AMQP_Client(
   heartbeat=5
 )
 
-def on_message(data, routing_key):
+def on_message(dataInput: object, routing_key: str):
   # Logic code here
-  return 'result for client here'
+  # Must to return object json
+  return {"success": True}
 
 server = connection.create_RPC_Server(
   queue='test_queue',

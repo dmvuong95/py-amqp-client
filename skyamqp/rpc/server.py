@@ -1,6 +1,7 @@
 import pika
 import functools
 import threading
+import json
 
 class RPC_Server:
   def __init__(self, connection: pika.BlockingConnection, queue: str, on_message: None, prefetch_count: int):
@@ -31,8 +32,8 @@ def do_work(
   body: bytes,
   custom_func):
   try:
-    response = custom_func(body, method.routing_key)
-    conn.add_callback_threadsafe(functools.partial(send_response, channel, properties, response))
+    response = custom_func(json.loads(body), method.routing_key)
+    conn.add_callback_threadsafe(functools.partial(send_response, channel, properties, json.dumps(response)))
     conn.add_callback_threadsafe(functools.partial(ack_message, channel, method.delivery_tag))
   except Exception as e:
     print(e)

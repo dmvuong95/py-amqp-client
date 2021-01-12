@@ -10,11 +10,11 @@ connection = AMQP_Client(
   heartbeat=5
 )
 
-def on_message(data, routing_key):
-  print(routing_key, data)
-  for i in range(10000000):
-    print(i)
-  return 'felhfawhefhwef'
+def on_message(dataInput: object, routing_key: str):
+  print(routing_key, dataInput)
+  # for i in range(10000):
+  #   print(i)
+  return {"success": True}
 
 server = connection.create_RPC_Server(
   queue='test_queue',

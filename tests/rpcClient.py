@@ -13,7 +13,9 @@ client = connection.create_RPC_Client(
   queue='test_queue',
   timeout=0)
 try:
-  result = client.send('routing.key.test', 'sample message')
+  result = client.send('routing.key.test', {
+    "data": '123'
+  })
   print('Result:', result)
 except Exception as e:
   print(e)

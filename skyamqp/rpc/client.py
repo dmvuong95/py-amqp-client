@@ -1,6 +1,7 @@
 import pika
 import uuid
 import time
+import json
 
 class RPC_Client:
   def __init__(self, connection: pika.BlockingConnection, channel: pika.adapters.blocking_connection.BlockingChannel, queue: str, timeout: int = 0):
@@ -32,7 +33,7 @@ class RPC_Client:
       exchange=self.queueName,
     )
 
-  def send(self, routing_key: str, body: bytes):
+  def send(self, routing_key: str, dataInput: object):
     result = self.__channel__.queue_declare(self.queueName)
     if int(result.method.consumer_count) == 0:
       raise Exception('NO_SERVER_AVAILABLE')
@@ -44,9 +45,10 @@ class RPC_Client:
         routing_key=routing_key,
         properties=pika.BasicProperties(
           correlation_id=res.corr_id,
-          reply_to=self.__cbQueueName__
+          reply_to=self.__cbQueueName__,
+          content_type='application/json'
         ),
-        body=body
+        body=json.dumps(dataInput)
       )
     except pika.exceptions.UnroutableError as error:
       raise Exception(error)
@@ -70,7 +72,7 @@ class RPC_Client:
     # print(body)
     for res in self.__responses__:
       if res.corr_id == properties.correlation_id:
-        res.response = body
+        res.response = json.loads(body)
         break
 
 class RPC_Client_Response:
