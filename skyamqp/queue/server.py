@@ -3,12 +3,28 @@ import functools
 import threading
 import json
 
-class RPC_Server:
-  def __init__(self, connection: pika.BlockingConnection, queue: str, on_message: None, prefetch_count: int):
+class Queue_Server:
+  def __init__(self,
+    connection: pika.BlockingConnection,
+    queue: str,
+    group: str,
+    on_message: None,
+    prefetch_count: int):
+
     self.__channel__ = connection.channel()
     self.__channel__.basic_qos(prefetch_count=(prefetch_count or 100))
-    self.queueName = 'server.rpc.' + queue
+    self.queueName = 'server.queue.{}.{}'.format(queue, group)
+    self.exchangeName = 'server.queue.{}'.format(queue)
     self.__channel__.queue_declare(queue=self.queueName)
+    self.__channel__.exchange_declare(
+      exchange=self.exchangeName,
+      exchange_type='fanout'
+    )
+    self.__channel__.queue_bind(
+      queue=self.queueName,
+      exchange=self.exchangeName
+    )
+
     self.__threads__ = []
     on_message_callback = functools.partial(on_message_global, args=(connection, self.__threads__, on_message))
     self.__channel__.basic_consume(
@@ -31,8 +47,7 @@ def do_work(
   body: bytes,
   custom_func):
   try:
-    response = custom_func(json.loads(body), method.routing_key)
-    conn.add_callback_threadsafe(functools.partial(send_response, channel, properties, json.dumps(response)))
+    custom_func(json.loads(body), method.routing_key)
     conn.add_callback_threadsafe(functools.partial(ack_message, channel, method.delivery_tag))
   except Exception as e:
     print(e)
@@ -66,13 +81,3 @@ def nack_message(ch: pika.adapters.blocking_connection.BlockingChannel, delivery
   else:
     pass
 
-def send_response(
-  channel: pika.adapters.blocking_connection.BlockingChannel,
-  properties: pika.spec.BasicProperties,
-  response):
-  channel.basic_publish(
-    exchange='',
-    routing_key=properties.reply_to,
-    body=response,
-    properties=pika.BasicProperties(correlation_id=properties.correlation_id)
-  )

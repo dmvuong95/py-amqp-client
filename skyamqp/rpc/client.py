@@ -9,9 +9,9 @@ class RPC_Client:
     self.__timeout__ = timeout
 
     self.queueName = 'server.rpc.' + queue
-    # Consume an exclusive queue
     self.__connection__ = connection
     self.__channel__ = channel
+    # Consume an exclusive queue
     resultQueueDeclare = self.__channel__.queue_declare(
       queue='',
       exclusive=True

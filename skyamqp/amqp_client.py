@@ -1,7 +1,6 @@
 import pika
-import uuid
-import time
 from skyamqp.rpc import RPC_Server, RPC_Client
+from skyamqp.queue import Queue_Server, Queue_Client
 
 class AMQP_Client:
   def __init__(self, host, port, virtual_host, username, password, heartbeat):
@@ -22,3 +21,11 @@ class AMQP_Client:
       self.__clientChannel__ = self.__connection__.channel()
       self.__clientChannel__.confirm_delivery()
     return RPC_Client(self.__connection__, self.__clientChannel__, queue, timeout)
+
+  def create_Queue_Server(self, queue: str, group: str, on_message: None, prefetch_count: int):
+    return Queue_Server(self.__connection__, queue, group, on_message, prefetch_count)
+  def create_Queue_Client(self, queue: str):
+    if not hasattr(self, "__clientChannel__"):
+      self.__clientChannel__ = self.__connection__.channel()
+      self.__clientChannel__.confirm_delivery()
+    return Queue_Client(self.__connection__, self.__clientChannel__, queue)

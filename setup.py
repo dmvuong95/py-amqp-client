@@ -12,5 +12,5 @@ setup(
   long_description=long_description,
   long_description_content_type="text/markdown",
   install_requires=['pika'],
-  packages=['skyamqp', 'skyamqp.rpc']
+  packages=['skyamqp', 'skyamqp.rpc', 'skyamqp.queue']
 )
