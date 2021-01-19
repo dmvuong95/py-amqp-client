@@ -12,7 +12,7 @@ connection = AMQP_Client(
 )
 ```
 # RPC
-## Client
+## RPC Client
 ```python
 client = connection.create_RPC_Client(
   queue='test_rpc',
@@ -27,7 +27,7 @@ except Exception as e:
   print(e)
 
 ```
-## Server
+## RPC Server
 ```python
 def on_message(dataInput: dict, routing_key: str):
   # Logic code here
@@ -44,7 +44,7 @@ except KeyboardInterrupt:
   server.stop()
 ```
 # Queue
-## Client
+## Queue Client
 ```python
 client = connection.create_Queue_Client(
   queue='test_queue')
@@ -56,7 +56,7 @@ try:
 except Exception as e:
   print(e)
 ```
-## Server
+## Queue Server
 ```python
 def on_message(dataInput: dict, routing_key: str):
   try:

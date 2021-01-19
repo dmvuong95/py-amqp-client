@@ -6,8 +6,6 @@ import uuid
 import time
 
 class AMQP_Client:
-  __connection__: pika.BlockingConnection
-  __clientChannel__: pika.adapters.blocking_connection.BlockingChannel
   __queueCmd__ = []
   def __init__(self, host, username, password, virtual_host: str = '/', port: int = 5672, heartbeat: int = 0):
     self.__connectionId__ = str(uuid.uuid4())
@@ -73,7 +71,7 @@ class AMQP_Client:
       # print(1)
       if len(self.__queueCmd__):
         cmd = self.__queueCmd__[0]
-        print(4444, cmd)
+        # print(4444, cmd)
         # RPC
         if cmd['method'] == 'create_RPC_Server':
           rpcServer = connection.create_RPC_Server(cmd['args']['queue'], cmd['args']['on_message'], cmd['args']['prefetch_count'])
