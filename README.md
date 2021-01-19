@@ -29,19 +29,18 @@ except Exception as e:
 ```
 ## Server
 ```python
-def on_message(dataInput: object, routing_key: str):
+def on_message(dataInput: dict, routing_key: str):
   # Logic code here
   # Must to return object json
   return {"success": True}
 
-server = connection.create_RPC_Server(
-  queue='test_rpc',
-  on_message=on_message,
-  prefetch_count=100)
-
 try:
-  server.start()
-except KeyboardInterrupt as identifier:
+  server = connection.create_RPC_Server(
+    queue='test_rpc',
+    on_message=on_message,
+    prefetch_count=100)
+
+except KeyboardInterrupt:
   server.stop()
 ```
 # Queue
@@ -59,7 +58,7 @@ except Exception as e:
 ```
 ## Server
 ```python
-def on_message(dataInput: object, routing_key: str):
+def on_message(dataInput: dict, routing_key: str):
   try:
     # Logic code here
     # Return nothing
@@ -67,14 +66,13 @@ def on_message(dataInput: object, routing_key: str):
     # raise exception to un-ack and requeue message
     raise e
 
-server = connection.create_Queue_Server(
-  queue='test_queue',
-  group='group1',
-  on_message=on_message,
-  prefetch_count=100)
-
 try:
-  server.start()
-except KeyboardInterrupt as identifier:
+  server = connection.create_Queue_Server(
+    queue='test_queue',
+    group='group1',
+    on_message=on_message,
+    prefetch_count=100)
+
+except KeyboardInterrupt:
   server.stop()
 ```

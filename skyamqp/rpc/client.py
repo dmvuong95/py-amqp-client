@@ -3,7 +3,7 @@ import uuid
 import time
 import json
 
-class RPC_Client:
+class RPC_Client_Thread:
   def __init__(self, connection: pika.BlockingConnection, channel: pika.adapters.blocking_connection.BlockingChannel, queue: str, timeout: int = 0):
     self.__responses__ = []
     self.__timeout__ = timeout
@@ -33,33 +33,38 @@ class RPC_Client:
       exchange=self.queueName,
     )
 
-  def send(self, routing_key: str, dataInput: object):
+  def send(self, args: dict):
+    routing_key: str = args['routing_key']
+    dataInput: dict = args['dataInput']
     result = self.__channel__.queue_declare(self.queueName)
     if int(result.method.consumer_count) == 0:
-      raise Exception('NO_SERVER_AVAILABLE')
-    res = RPC_Client_Response(str(uuid.uuid4()))
-    self.__responses__.append(res)
+      args['exception'] = 'NO_SERVER_AVAILABLE'
+      return
+    
+    self.__responses__.append(args)
     try:
       self.__channel__.basic_publish(
         exchange=self.queueName,
         routing_key=routing_key,
         properties=pika.BasicProperties(
-          correlation_id=res.corr_id,
+          correlation_id=args['corr_id'],
           reply_to=self.__cbQueueName__,
           content_type='application/json'
         ),
         body=json.dumps(dataInput)
       )
     except pika.exceptions.UnroutableError as error:
-      raise Exception(error)
+      args['exception'] = error
+      return
 
-    t = time.time()
-    while ((res.response is None) and (self.__timeout__ == 0 or time.time() - t < self.__timeout__)):
-      self.__connection__.process_data_events()
-    self.__responses__.remove(res)
-    if res.response is None:
-      raise Exception('REQUEST_WAS_TIMED_OUT')
-    return res.response
+    # t = time.time()
+    # while ((res.response is None) and (self.__timeout__ == 0 or time.time() - t < self.__timeout__)):
+    #   self.__connection__.process_data_events()
+    # self.__responses__.remove(res)
+    # if res.response is None:
+    #   args['exception'] = 'REQUEST_WAS_TIMED_OUT'
+    #   return
+    # return res.response
 
   def __on_message__(
     self,
@@ -71,12 +76,8 @@ class RPC_Client:
     # print(properties.content_type, properties.correlation_id)
     # print(body)
     for res in self.__responses__:
-      if res.corr_id == properties.correlation_id:
-        res.response = json.loads(body)
+      if res['corr_id'] == properties.correlation_id:
+        res['response'] = json.loads(body)
+        self.__responses__.remove(res)
         break
-
-class RPC_Client_Response:
-  def __init__(self, corr_id):
-    self.corr_id = corr_id
-    self.response = None
 

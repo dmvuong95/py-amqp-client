@@ -1,7 +1,8 @@
 from skyamqp import AMQP_Client
+import time
 
 connection = AMQP_Client(
-  host='192.168.4.107',
+  host='192.168.4.121',
   port=5672,
   virtual_host='/',
   username='admin',
@@ -11,6 +12,7 @@ connection = AMQP_Client(
 
 client = connection.create_Queue_Client(
   queue='test_queue')
+time.sleep(10)
 try:
   for i in range(100):
     result = client.send('routing.key.test', {

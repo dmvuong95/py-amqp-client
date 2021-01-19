@@ -2,7 +2,7 @@ from skyamqp import AMQP_Client
 import time
 
 connection = AMQP_Client(
-  host='192.168.4.107',
+  host='192.168.4.121',
   port=5672,
   virtual_host='/',
   username='admin',
@@ -10,19 +10,20 @@ connection = AMQP_Client(
   heartbeat=5
 )
 
-def on_message(dataInput: object, routing_key: str):
+def on_message(dataInput: dict, routing_key: str):
   print(routing_key, dataInput)
-  time.sleep(10)
-  print('OK')
-  return {"success": True}
+  try:
+    time.sleep(10)
+    print('OK')
+  except Exception as e:
+    raise e
 
+time.sleep(10)
 server = connection.create_Queue_Server(
   queue='test_queue',
   group='group2',
   on_message=on_message,
   prefetch_count=30)
+time.sleep(20)
 
-try:
-  server.start()
-except KeyboardInterrupt as identifier:
-  server.stop()
+server.stop()

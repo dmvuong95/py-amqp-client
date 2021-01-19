@@ -1,7 +1,7 @@
 import pika
 import json
 
-class Queue_Client:
+class Queue_Client_Thread:
   def __init__(self,
     connection: pika.BlockingConnection,
     channel: pika.adapters.blocking_connection.BlockingChannel,
@@ -15,7 +15,9 @@ class Queue_Client:
       exchange_type='fanout'
     )
 
-  def send(self, routing_key: str, dataInput: object):
+  def send(self, args: dict):
+    routing_key: str = args['routing_key']
+    dataInput: dict = args['dataInput']
     try:
       self.__channel__.basic_publish(
         exchange=self.exchangeName,
@@ -25,7 +27,7 @@ class Queue_Client:
         ),
         body=json.dumps(dataInput)
       )
-      return {"success":True}
+      args['response'] = {"success":True}
     except pika.exceptions.UnroutableError as error:
-      raise error
+      args['exception'] = error
 

@@ -3,7 +3,7 @@ import functools
 import threading
 import json
 
-class RPC_Server:
+class RPC_Server_Thread:
   def __init__(self, connection: pika.BlockingConnection, queue: str, on_message: None, prefetch_count: int):
     self.__channel__ = connection.channel()
     self.__channel__.basic_qos(prefetch_count=(prefetch_count or 100))
@@ -16,8 +16,6 @@ class RPC_Server:
       on_message_callback=on_message_callback
     )
 
-  def start(self):
-    self.__channel__.start_consuming()
   def stop(self):
     self.__channel__.stop_consuming()
     for thread in self.__threads__:

@@ -3,7 +3,7 @@ import functools
 import threading
 import json
 
-class Queue_Server:
+class Queue_Server_Thread:
   def __init__(self,
     connection: pika.BlockingConnection,
     queue: str,
@@ -32,8 +32,6 @@ class Queue_Server:
       on_message_callback=on_message_callback
     )
 
-  def start(self):
-    self.__channel__.start_consuming()
   def stop(self):
     self.__channel__.stop_consuming()
     for thread in self.__threads__:
