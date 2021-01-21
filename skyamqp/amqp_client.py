@@ -11,7 +11,7 @@ class AMQP_Client:
   __queueCmd__ = []
   def __init__(self, host, username, password, virtual_host: str = '/', port: int = 5672, heartbeat: int = 0):
     self.__connectionId__ = str(uuid.uuid4())
-    threading.Thread(target=self.create_thread, args=(host, username, password, virtual_host, port, heartbeat)).start()
+    threading.Thread(target=self.__create_thread, args=(host, username, password, virtual_host, port, heartbeat)).start()
   
   def create_RPC_Server(self, queue: str, on_message: None, prefetch_count: int):
     rpcServerId = str(uuid.uuid4())
@@ -63,7 +63,7 @@ class AMQP_Client:
     })
     return Queue_Client(queueClientId, queue, self.__queueCmd__)
 
-  def create_thread(self, host, username, password, virtual_host, port, heartbeat):
+  def __create_thread(self, host, username, password, virtual_host, port, heartbeat):
     connection = AMQP_Client_Thread(host, username, password, virtual_host, port, heartbeat)
     rpcServerList = {}
     rpcClientList = {}
