@@ -1,1 +1,0 @@
-from skyamqp import AMQP_Client

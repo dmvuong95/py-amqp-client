@@ -2,6 +2,10 @@ import pika
 import functools
 import threading
 import json
+import gc
+import logging
+logger = logging.getLogger('skyamqp.queue.server')
+logger.setLevel(logging.WARNING)
 
 class Queue_Server_Thread:
   def __init__(self,
@@ -34,8 +38,8 @@ class Queue_Server_Thread:
 
   def stop(self):
     self.__channel__.stop_consuming()
-    for thread in self.__threads__:
-      thread.join()
+    # for thread in self.__threads__:
+    #   thread.join()
 
 def do_work(
   conn: pika.BlockingConnection,
@@ -48,8 +52,11 @@ def do_work(
     custom_func(json.loads(body), method.routing_key)
     conn.add_callback_threadsafe(functools.partial(ack_message, channel, method.delivery_tag))
   except Exception as e:
-    print(e)
-    conn.add_callback_threadsafe(functools.partial(nack_message, channel, method.delivery_tag))
+    logger.warning(e)
+    if conn.is_open:
+      conn.add_callback_threadsafe(functools.partial(nack_message, channel, method.delivery_tag))
+  finally:
+    gc.collect()
 
 def on_message_global(
   channel: pika.adapters.blocking_connection.BlockingChannel,
@@ -60,22 +67,13 @@ def on_message_global(
   (conn, thrds, custom_func) = args
   t = threading.Thread(target=do_work, args=(conn, channel, method, properties, body, custom_func))
   t.start()
-  thrds.append(t)
+  # thrds.append(t)
 
 def ack_message(ch: pika.adapters.blocking_connection.BlockingChannel, delivery_tag):
-  """Note that `ch` must be the same pika channel instance via which
-  the message being ACKed was retrieved (AMQP protocol constraint).
-  """
   if ch.is_open:
     ch.basic_ack(delivery_tag)
-  else:
-    # Channel is already closed, so we can't ACK this message;
-    # log and/or do something that makes sense for your app in this case.
-    pass
 
 def nack_message(ch: pika.adapters.blocking_connection.BlockingChannel, delivery_tag):
   if ch.is_open:
     ch.basic_nack(delivery_tag)
-  else:
-    pass
 

@@ -1,11 +1,40 @@
-# Init connection
+# Upload package to Pypiserver
+Set Pypiserver host in `.pypirc`
+```conf
+[local]
+repository: http://192.168.4.100:5002
+username: admin
+password: 123654123
+
+[distutils]
+index-servers =
+  local
+```
+Build and upload package to Pypiserver
+```bash
+$ bash script-build.sh
+```
+# Install package from Pypiserver
+When pip search packages, pip will read the configuration in `~/.pip/pip.conf`
+Make custom configuration `~/.pip/pip.conf`:
+```conf
+[global]
+extra-index-url = http://192.168.4.100:5002/simple/
+trusted-host = 192.168.4.100
+```
+Install now:
+```bash
+$ pip install skyamqp
+```
+
+# Init connection to RabbitMQ
 ```python
 from skyamqp import AMQP_Client
 
 connection = AMQP_Client(
   host='192.168.4.107',
   port=5672,
-  virtual_host='/',
+  virtual_host='/eof',
   username='admin',
   password='123654123',
   heartbeat=5

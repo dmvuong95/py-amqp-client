@@ -6,6 +6,7 @@ import uuid
 import time
 import logging
 logger = logging.getLogger('skyamqp')
+logger.setLevel(logging.WARNING)
 
 class AMQP_Client:
   __queueCmd__ = []
@@ -71,10 +72,8 @@ class AMQP_Client:
     queueClientList = {}
     listCmd = {}
     while True:
-      # print(1)
       if len(self.__queueCmd__):
         cmd = self.__queueCmd__[0]
-        # print(4444, cmd)
         # RPC
         if cmd['method'] == 'create_RPC_Server':
           rpcServer = connection.create_RPC_Server(cmd['args']['queue'], cmd['args']['on_message'], cmd['args']['prefetch_count'])
@@ -108,26 +107,24 @@ class AMQP_Client:
           queueClientList[cmd['args']['id']].send(cmd['args'])
         
         self.__queueCmd__.remove(cmd)
-        pass
       else:
         try:
           connection.__connection__.process_data_events(0.2)
-          pass
-        except pika.exceptions.StreamLostError as e:
+        except Exception as e:
           logger.warning(e)
-          # re-connect
-          if connection.__connection__.is_open:
-            connection.__connection__.close()
-          time.sleep(0.2)
-          connection = AMQP_Client_Thread(host, username, password, virtual_host, port, heartbeat)
-          for key in listCmd:
-            if listCmd[key] is None:
-              pass
-            else:
-              self.__queueCmd__.append(listCmd[key])
-            pass
-          pass
-        pass
+          if isinstance(e, pika.exceptions.AMQPError):
+            # re-connect
+            if connection.__connection__.is_open:
+              connection.__connection__.close()
+            time.sleep(0.2)
+            connection = AMQP_Client_Thread(host, username, password, virtual_host, port, heartbeat)
+            for key in listCmd:
+              if listCmd[key] is None:
+                pass
+              else:
+                self.__queueCmd__.append(listCmd[key])
+          else:
+            raise e
 
 class AMQP_Client_Thread:
   __connection__: pika.BlockingConnection
@@ -194,7 +191,7 @@ class RPC_Client:
       }
     }
     self.queueCmd.append(cmd)
-    period = 0.05
+    period = 0.1
     t = 0
     while cmd['args']['response'] is None and cmd['args']['exception'] is None and (self.timeout == 0 or t < self.timeout):
       t += period
